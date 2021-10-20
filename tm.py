@@ -21,7 +21,6 @@ class TM:
             return False
 
     def main(self):
-        print(self.description)
         arq = open(self.description + '.tm', 'r')
         lines = arq.readlines()
         del (lines[0])  # delete the Comment
