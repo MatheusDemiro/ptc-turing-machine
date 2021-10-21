@@ -12,7 +12,8 @@ class GUI:
         self.runFrame = Frame(self.root)
         self.commandsFrame = Frame(self.root)
 
-        self.scroll = Scrollbar(self.runFrame, orient='vertical')
+        self.responseScroll = Scrollbar(self.runFrame, orient='vertical')
+        self.transitionsScroll = Scrollbar(self.runFrame, orient='vertical')
 
         self.fileNameInput = Text(self.homeFrame, height=1, width=20)
         self.machineInput = Text(self.runFrame, height=1, width=20)
@@ -20,6 +21,7 @@ class GUI:
         self.rt = Text(self.runFrame, height=1, width=6)
 
         self.response = Text(self.runFrame, width=50)
+        self.transitionsResponse = Text(self.runFrame, width=50)
         self.fileNameErrorLabel = Label(self.homeFrame, text="", fg="red")
         self.machineInputErrorLabel = Label(self.runFrame, text="", fg="red")
 
@@ -30,7 +32,7 @@ class GUI:
         self.selectedMode = StringVar(self.runFrame, value=0)
         self.dropdown = OptionMenu(self.runFrame, self.selectedMode, "0", "1", "2")
 
-        self.tm = TM(self.response, self.next)
+        self.tm = TM(self.response, self.transitionsResponse, self.next)
 
         self.next.configure(command=lambda: self.on_click_next())
 
@@ -43,12 +45,12 @@ class GUI:
 
         self.open_frame(self.homeFrame)
         self.root.title("Máquina de Turing Ingênua")
-        self.root.maxsize(700, 1000)
-        self.root.minsize(600, 400)
+        self.root.maxsize(1000, 1000)
+        self.root.minsize(1000, 400)
         self.root.mainloop()
 
     def create_home_frame(self):
-        Label(self.homeFrame, text="Informe o nome do arquivo '.tm'").pack(pady=(100, 0))
+        Label(self.homeFrame, text="Informe o nome do arquivo '.tm'").pack(pady=(200, 0))
 
         self.fileNameInput.pack(padx=210)
         self.fileNameErrorLabel.pack()
@@ -78,16 +80,22 @@ class GUI:
         self.machineInputErrorLabel.grid(row=5, padx=(100, 0))
 
         self.play.grid(row=6, column=0, padx=(30, 0))
-
         self.next.grid(row=6, column=0, padx=(180, 0))
 
-        self.response.grid(row=7, pady=20, padx=(100, 0))
+        Label(self.runFrame, text="FITA").grid(row=7, padx=(100, 0), pady=(20, 0))
+        Label(self.runFrame, text="TRANSIÇÕES").grid(row=7, column=2, padx=(20, 0))
 
-        self.response.config(yscrollcommand=self.scroll.set)
+        self.response.grid(row=8, pady=20, padx=(100, 0))
+        self.transitionsResponse.grid(row=8, column=2, padx=(50, 0))
 
-        self.scroll.config(command=self.response.xview)
+        self.response.config(yscrollcommand=self.responseScroll.set)
+        self.transitionsResponse.config(yscrollcommand=self.transitionsScroll.set)
 
-        self.scroll.grid(row=7, column=1, sticky=NS, pady=20)
+        self.responseScroll.config(command=self.response.xview)
+        self.transitionsScroll.config(command=self.transitionsResponse.xview)
+
+        self.responseScroll.grid(row=8, column=1, sticky=NS, pady=20)
+        self.transitionsScroll.grid(row=8, column=3, sticky=NS, pady=20)
 
     def loading(self):
         self.btnLoad.configure(state="disabled")
@@ -119,6 +127,7 @@ class GUI:
             self.show_error(self.machineInputErrorLabel, "RT e LT devem ser números inteiros.")
         else:
             self.response.delete('1.0', END)
+            self.transitionsResponse.delete('1.0', END)
             self.machineInputErrorLabel.configure(text="")
 
             if self.selectedMode.get() == "1":
@@ -130,6 +139,7 @@ class GUI:
 
     def on_click_next(self):
         self.response.yview_moveto('1.0')
+        self.transitionsResponse.yview_moveto('1.0')
 
         self.tm.var.set(1)
 
