@@ -19,7 +19,7 @@ class GUI:
         self.lt = Text(self.runFrame, height=1, width=6)
         self.rt = Text(self.runFrame, height=1, width=6)
 
-        self.response = Text(self.runFrame)
+        self.response = Text(self.runFrame, width=50)
         self.fileNameErrorLabel = Label(self.homeFrame, text="", fg="red")
         self.machineInputErrorLabel = Label(self.runFrame, text="", fg="red")
 
@@ -30,7 +30,9 @@ class GUI:
         self.selectedMode = StringVar(self.runFrame, value=0)
         self.dropdown = OptionMenu(self.runFrame, self.selectedMode, "0", "1", "2")
 
-        self.tm = TM(self.response)
+        self.tm = TM(self.response, self.next)
+
+        self.next.configure(command=lambda: self.on_click_next())
 
     def initialize_frames(self):
         for frame in (self.homeFrame, self.runFrame):
@@ -39,7 +41,7 @@ class GUI:
         self.create_home_frame()
         self.create_run_frame()
 
-        self.open_frame(self.runFrame)
+        self.open_frame(self.homeFrame)
         self.root.title("Máquina de Turing Ingênua")
         self.root.maxsize(700, 1000)
         self.root.minsize(600, 400)
@@ -51,11 +53,7 @@ class GUI:
         self.fileNameInput.pack(padx=210)
         self.fileNameErrorLabel.pack()
 
-        self.btnLoad = Button(self.homeFrame, text="Carregar arquivo",
-                              command=lambda: self.loading()
-                              if self.tm.load_turing_machine(self.fileNameInput.get("1.0", "end-1c"))
-                              else self.show_error(self.fileNameErrorLabel,
-                                                   "Arquivo não localizado na pasta 'machines'."))
+        self.btnLoad = Button(self.homeFrame, text="Carregar arquivo", command=self.on_click_load_file)
 
         self.btnLoad.pack(pady=(0, 10))
 
@@ -64,7 +62,7 @@ class GUI:
 
     def create_run_frame(self):
         Button(self.runFrame, text="Voltar", command=lambda: self.open_frame(self.homeFrame)).grid(row=0, column=0,
-                                                                                                   padx=(10, 400),
+                                                                                                   padx=(0, 400),
                                                                                                    pady=(10, 0))
 
         Label(self.runFrame, text="Entrada da Máquina de Turing").grid(row=1, padx=(0, 50))
@@ -83,11 +81,7 @@ class GUI:
 
         self.next.grid(row=6, column=0, padx=(180, 0))
 
-        self.response.grid(row=7, padx=(0, 0), pady=20)
-
-        # insert some text into the text widget
-        for i in range(10):
-            self.response.insert(END, "this is some text\n")
+        self.response.grid(row=7, pady=20, padx=(100, 0))
 
         self.response.config(yscrollcommand=self.scroll.set)
 
@@ -105,33 +99,39 @@ class GUI:
         self.root.after(1000, lambda: self.clear_home_frame())
 
     def clear_home_frame(self):
-        self.fileNameErrorLabel.configure(text="")
+        self.fileNameErrorLabel.configure(text="", fg="red")
+
+    def on_click_load_file(self):
+        if self.tm.load_turing_machine(self.fileNameInput.get("1.0", "end-1c")):
+            self.loading()
+        else:
+            self.show_error(self.fileNameErrorLabel, "Arquivo não localizado na pasta 'machines'.")
 
     def on_click_play(self):
-        # Testing
-        # insert some text into the text widget
-        for i in range(10):
-            self.response.insert(END, "this is some text\n")
-
-        self.response.yview_moveto('1.0')
-
         machineInput = self.machineInput.get("1.0", "end-1c")
         lt = self.lt.get("1.0", "end-1c")
         rt = self.rt.get("1.0", "end-1c")
+        fileName = self.fileNameInput.get("1.0", "end-1c")
 
         if machineInput == "" or machineInput is None:
             self.show_error(self.machineInputErrorLabel, "Entrada inválida.")
         elif not lt.isdecimal() or not rt.isdecimal():
             self.show_error(self.machineInputErrorLabel, "RT e LT devem ser números inteiros.")
         else:
+            self.response.delete('1.0', END)
             self.machineInputErrorLabel.configure(text="")
 
-        if self.selectedMode.get() == "1":
-            self.next.configure(state="normal")
+            if self.selectedMode.get() == "1":
+                self.next.configure(state="normal")
+            else:
+                self.next.configure(state="disabled")
 
-    @staticmethod
-    def on_click_next():
-        NotImplementedError()
+            self.tm.execute(fileName, machineInput, lt, rt, self.selectedMode.get())
+
+    def on_click_next(self):
+        self.response.yview_moveto('1.0')
+
+        self.tm.var.set(1)
 
     @staticmethod
     def show_error(label, message):
